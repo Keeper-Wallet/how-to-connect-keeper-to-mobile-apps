@@ -51,7 +51,8 @@ private val serverUrl = "wss://$relayUrl?projectId=$projectId"
 
 val connectionType = ConnectionType.AUTOMATIC
 
-//Describe your app and define its appearance
+// Describe your app and define its appearance in Keeper Wallet 
+// when a user is prompted to connect or sign a transaction/order/message
 val appMetaData = Core.Model.AppMetaData(
     name = "YOUR_APP_NAME",
     description = "YOUR_APP_DESC",
@@ -69,15 +70,19 @@ SignClient.initialize(Sign.Params.Init(core = CoreClient)) { error ->
 }
 ```
 
-## Step 4. Create a pairing URI for Keeper Wallet
+## Step 4. Get a pairing URI for Keeper Wallet
+
+Send a request to WalletConnect to get a pairing URI for Keeper Wallet.
 
 ```kotlin
 val pairing = CoreClient.Pairing.create()
 
+// Set the chain ID: 'W' for Mainnet or 'T' for Testnet
 val chains: List<String> = listOf("waves:T")
 val methods: List<String> = listOf(
     "waves_signTransaction", 
     "waves_signTransactionPackage", 
+    "waves_signOrder",
     "waves_signMessage", 
     "waves_signTypedData"
 )
@@ -99,9 +104,13 @@ SignClient.connect(connectParams,
 
 ## Step 5. Connect Keeper Wallet
 
-[Deep Links](https://developer.android.com/training/app-links/deep-linking) are used to interact with Keeper Wallet. As a result of a call, Keeper Wallet is opened and the user is prompted to connect.
+Here's how it works:
 
-After the user confirms or cancels the connection, your app is called back. For the callback, the Deep Link must be configured in your app.
+1. Your app calls Keeper, specifying the callback URL in the request.
+2. The Keeper Wallet app opens and prompts the user to connect.
+3. Once the user confirms or cancels the connection, your app receives a callback.
+
+[Deep Links](https://developer.android.com/training/app-links/deep-linking) are used to interact with Keeper Wallet. For the callback, the Deep Link must be configured in your app.
 
 ```kotlin
 val callback = "YOUR_DEEP_LINK"
@@ -128,13 +137,16 @@ override fun onSessionApproved(approvedSession: Sign.Model.ApprovedSession) {
 }
 ```
 
-## Step 6. Sign a transaction
+## Step 6. Sign a transaction/order/message
 
-As a result of the request, Keeper Wallet is opened and the user is prompted to sign the transaction.
+Here is how it works:
 
-After the user confirms or cancels the transaction, your app is called back.
+1. Your app sends a signing request via WalletConnect.
+2. Your app calls Keeper, specifying the callback URL in the request.
+3. The Keeper Wallet app opens and prompts the user to sign the transaction, order, or custom message.
+4. Once the user confirms or cancels the request, your app receives a callback.
 
-Example:
+### Transaction
 
 ```kotlin
 val params = JSONObject( YOUR_TX_PARAMS ).toString()
@@ -148,7 +160,38 @@ SignClient.request(Sign.Params.Request(
 }
 ```
 
-Call Keeper Wallet with `topic` specified:
+### Order
+
+```kotlin
+val params = JSONObject( YOUR_ORDER_PARAMS ).toString()
+SignClient.request(Sign.Params.Request(
+    sessionTopic = sessionTopic,
+    method = "waves_signOrder",
+    params = listOf(params).toString(),
+    chainId = currentChainId
+)){error->
+    // Error will be thrown if there's an issue during request
+}
+```
+
+### Custom message
+
+```kotlin
+val params = "YOUR_MESSAGE"
+SignClient.request(Sign.Params.Request(
+    sessionTopic = sessionTopic,
+    method = "waves_signMessage",
+    params = listOf(params).toString(),
+    chainId = currentChainId
+)){error->
+    // Error will be thrown if there's an issue during request
+}
+```
+
+### Call Keeper Wallet
+
+Specify `topic` and `callback` in the request.
+
 
 ```kotlin
 private val callback = "YOUR_DEEP_LINK"
@@ -167,4 +210,4 @@ val browserIntent = Intent(
 startActivity(browserIntent)
 ```
 
-The result of signing the transaction comes in the `onSessionRequestResponse` function.
+The result of signing the request comes in the `onSessionRequestResponse` function.

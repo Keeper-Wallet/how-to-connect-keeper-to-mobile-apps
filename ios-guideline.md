@@ -58,7 +58,7 @@ Networking.configure(
 
 ## Step 4. Configure the Pair instance
 
-Describe your app and define its appearance.
+Describe your app and define its appearance in Keeper Wallet  when a user is prompted to connect or sign a transaction/order/message.
 
 ```swift
 let metadata = AppMetadata(name: "YOUR_APP_NAME",
@@ -70,13 +70,16 @@ let metadata = AppMetadata(name: "YOUR_APP_NAME",
 Pair.configure(metadata: metadata)
 ```
 
-## Step 5. Create a pairing URI for Keeper Wallet
+## Step 5. Get a pairing URI for Keeper Wallet
+
+Send a request to WalletConnect to get a pairing URI for Keeper Wallet.
 
 ```swift
 let methods: Set<String> = [
       "waves_signTransaction", 
       "waves_signTransactionPackage", 
-      "waves_signMessage", 
+      "waves_signOrder",
+      "waves_signMessage",
       "waves_signTypedData"
 ]
 // Set the chain ID: 'W' for Mainnet or 'T' for Testnet
@@ -94,9 +97,13 @@ try! await Sign.instance.connect(
 
 ## Step 6. Connect Keeper Wallet
 
-To call Keeper Wallet, use the universal link. As a result, Keeper Wallet is opened and the user is prompted to connect.
+Here's how it works:
 
-After the user confirms or cancels the connection, your app is called back. For the callback, a universal link or a [custom URL scheme](https://developer.apple.com/documentation/xcode/defining-a-custom-url-scheme-for-your-app) must be defined for your app.
+1. Your app calls Keeper, specifying the callback URL in the request.
+2. The Keeper Wallet app opens and prompts the user to connect.
+3. Once the user confirms or cancels the connection, your app receives a callback.
+
+To call Keeper Wallet, use the universal link. For the callback, a universal link or a [custom URL scheme](https://developer.apple.com/documentation/xcode/defining-a-custom-url-scheme-for-your-app) must be defined for your app.
 
 ```swift
 let callback = "YOUR_LINK_OR_SCHEME"
@@ -123,11 +130,16 @@ Sign.instance.sessionSettlePublisher
       }.store(in: &publishers)
 ```
 
-## Step 7. Sign a transaction
+## Step 7. Sign a transaction/order/message
 
-As a result of the request, Keeper Wallet is opened and the user is prompted to sign the transaction.
+Here is how it works:
 
-After the user confirms or cancels the transaction, your app is called back.
+1. Your app sends a signing request via WalletConnect.
+2. Your app calls Keeper, specifying the callback URL in the request.
+3. The Keeper Wallet app opens and prompts the user to sign the transaction, order, or custom message.
+4. Once the user confirms or cancels the request, your app receives a callback.
+
+### Transaction
 
 Example:
 
@@ -140,7 +152,31 @@ let request = Request(topic: currentSession!.topic, method: method, params: requ
 try! await Sign.instance.request(params: request)
 ```
 
-Call Keeper Wallet with `topic` specified:
+### Order
+
+```swift
+let method = "waves_signOrder"
+let orderJson = { YOUR_ORDER_PARAMS }
+let requestParams = AnyCodable([orderJson])
+
+let request = Request(topic: currentSession!.topic, method: method, params: requestParams, chainId: blockchains.first!)
+try! await Sign.instance.request(params: request)
+```
+
+### Custom message
+
+```swift
+let method = "waves_signMessage"
+let message = "YOUR_MESSAGE"
+let requestParams = AnyCodable([message])
+
+let request = Request(topic: currentSession!.topic, method: method, params: requestParams, chainId: blockchains.first!)
+try! await Sign.instance.request(params: request)
+```
+
+### Call Keeper Wallet
+
+Specify `topic` and `callback` in the request.
 
 ```swift
 let callback = "YOUR_LINK_OR_SCHEME"
@@ -154,7 +190,7 @@ let url = URL(string: "https://link.keeper-wallet.app/wakeup?\(query)")
 UIApplication.shared.open(url)
 ```
 
-The result of signing the transaction comes to the listener:
+The result of signing the request comes to the listener:
 
 ```swift
 Sign.instance.sessionResponsePublisher
