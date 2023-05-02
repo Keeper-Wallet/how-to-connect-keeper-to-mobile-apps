@@ -1,4 +1,4 @@
-# Connect Keeper Wallet in your Android app (Kotlin)
+# Connect Keeper Wallet in your app (Kotlin)
 
 **Requirements**
 * Android min SDK 23

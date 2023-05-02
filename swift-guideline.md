@@ -1,4 +1,4 @@
-# Connect Keeper Wallet in your iOS app (Swift)
+# Connect Keeper Wallet in your app (Swift)
 
 To interact with Keeper Wallet in your iOS app, complete the following steps:
 
