@@ -6,4 +6,4 @@ Keeper Wallet uses [WalletConnect](https://docs.walletconnect.com/2.0) communica
 
 To let your users connect Keeper Wallet from your mobile app, follow the guidelines:
 
-[iOS](./ios-guideline.md)    |    [Android](./android-guideline.md)
+[Swift](./swift-guideline.md)    |    [Kotlin](./kotlin-guideline.md)    |    [Flutter](./flutter-guideline.md)
